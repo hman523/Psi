@@ -1,16 +1,16 @@
 module Types where
 
 data Expr = Var String
-          | IntLit Int
+          | IntLit Integer
           | Neg Expr
           | BoolLit Bool
           | Not Expr
-		  | BoolBin BoolBinOp Expr Expr
-		  | BoolRel BoolRelOp Expr Expr
+          | BoolBin BoolBinOp Expr Expr
+          | BoolRel BoolRelOp Expr Expr
           | NumBin ArithOp Expr Expr
-		  | StringLit String
-		  | FnCall String [Expr]
-			   deriving (Show)
+          | StringLit String
+          | FnCall String [Expr]
+               deriving (Show)
 
 -- Boolean operators for Bool -> Bool -> Bool
 data BoolBinOp = And | Or | Nor | Nand | Xor | Xnor
@@ -32,11 +32,11 @@ data Effect = Pure | Impure | IO | RS | WS
 data Stmt = Empty
           | Body [Stmt]
           | Assign String Expr
-		  | Declare Bool PsiType String Expr
-		  | If Expr Stmt Stmt
-		  | While Expr Stmt
-		  | FnDecl String Effect [PsiType] PsiType
-		  | FnImpl String [String] Stmt
-		  | ExprLit Expr
+          | Declare Bool PsiType String Expr
+          | If Expr Stmt Stmt
+          | While Expr Stmt
+          | FnDecl String Effect [PsiType] PsiType
+          | FnImpl String [String] Stmt
+          | ExprLit Expr
            deriving (Show)
 

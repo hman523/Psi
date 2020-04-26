@@ -1,7 +1,7 @@
 module Parser where
 
 import Control.Monad
-import Prelude hiding (id)
+import Prelude hiding (id, EQ, LT, GT)
 import Text.ParserCombinators.Parsec
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language
@@ -55,14 +55,14 @@ languageDef =
         , "nand"
         , "xor"
         , "xnor"
-        , "["
-        , "]"
-        , "{"
-        , "}"
-        , "::"
-        , "->"
-        , "\""
-        , ","
+        --, "["
+        --, "]"
+        --, "{"
+        --, "}"
+        --, "::"
+        --, "->"
+        --, "\""
+        --, ","
         ]
     }
 
@@ -103,43 +103,42 @@ ifStmt :: Parser Stmt
 ifStmt = do
   reserved "if"
   predicate <- boolExpression
-  reservedOp "{"
+  char '{'
   trueStmt <- statement
-  reservedOp "}"
+  char '}'
   reserved "else"
-  reservedOp "{"
+  char '{'
   falseStmt <- statement
-  reservedOp "}"
+  char '}'
   return $ If predicate trueStmt falseStmt
 
 whileStmt :: Parser Stmt
 whileStmt = do
   reserved "while"
   predicate <- boolExpression
-  reservedOp "{"
+  char '{'
   body <- sequenceOfStmt
-  reservedOp "}"
+  char '}'
   return $ While predicate body
 
 emptyStmt :: Parser Stmt
 emptyStmt = do
-  reservedOp "{"
-  reservedOp "}"
+  char '{'
+  char '}'
   return Empty
 
 assignStmt :: Parser Stmt
 assignStmt = do
   s <- id
   reservedOp "="
-  expr <- parseExpr
-  return $ Assign s expr
+  Assign s <$> parseExpr
 
 declareStmt :: Parser Stmt
 declareStmt = do
   reserved "let"
   mutFlag <- optionMaybe (reserved "mut")
   let isMut = maybe False (const True) mutFlag
-  t <- anyType
+  t <- parseType
   var <- id
   reservedOp "="
   expr <- parseExpr
@@ -153,26 +152,26 @@ fnCallStmt = do name <- id
 fnDeclStmt :: Parser Stmt
 fnDeclStmt = do reserved "fn"
                 name <- id
-                reservedOp "::"
+                string "::"
                 e <- parseEffect
-                reservedOp "["
+                char '['
                 types <- parseTypes
-                reservedOp "->"
+                string "->"
                 t <- parseType
-                reservedOp "]"
+                char ']'
                 return $ FnDecl name e types t
 
 fnImplStmt :: Parser Stmt
 fnImplStmt = do reserved "fn"
                 name <- id
                 args <- parseArgNames
-                reservedOp "{"
+                char '{'
                 stmts <- sequenceOfStmt
-                reservedOp "}"
+                char '}'
                 return $ FnImpl name args stmts
 
-parseArgs = sepBy1 parseExpr $ reserved ","
-parseArgNames = sepBy1 id $ reserved ","
+parseArgs = sepBy1 parseExpr $ char ','
+parseArgNames = sepBy1 id $ char ','
 parseEffect = do x <- id 
                  case x of 
                    "Pure" -> return Pure
@@ -182,7 +181,7 @@ parseEffect = do x <- id
                    "WS" -> return WS
                    _    -> fail $ "Invalid effect given: " ++ x
 
-parseTypes = sepBy1 parseType $ reserved "," 
+parseTypes = sepBy1 parseType $ char ',' 
 parseType = do x <- id
                case x of
                  "Int" -> return IntT
@@ -195,16 +194,51 @@ parseExpr :: Parser Expr
 parseExpr = try boolExpression <|> try numExpression <|> stringExpression
 
 boolExpression :: Parser Expr
-boolExpression = do x <- id
-                    return $ Var x
+boolExpression = buildExpressionParser boolOperators boolTerm
 
+stringExpression :: Parser Expr
 stringExpression = do char '"'
                       s <- many (noneOf "\"")
                       char '"'
                       return $ StringLit s
 
 numExpression :: Parser Expr
-numExpression = undefined
+numExpression = buildExpressionParser numOperators numTerm
 
-anyType = id >> return BooleanT
--- numOperators = [ [Prefix (reserse
+numOperators = [ [Prefix (reservedOp "-"  >> return (Neg       )) ]
+               , [Infix  (reservedOp "*"  >> return (NumBin Mul)) AssocLeft,
+                  Infix  (reservedOp "/"  >> return (NumBin Div)) AssocLeft,
+                  Infix  (reservedOp "%"  >> return (NumBin Mod)) AssocLeft]
+               , [Infix  (reservedOp "+"  >> return (NumBin Add)) AssocLeft,
+                  Infix  (reservedOp "-"  >> return (NumBin Sub)) AssocLeft]
+               ]
+
+boolOperators = [ [Prefix (reservedOp "!"    >> return (Not         )) ]
+                , [Infix  (reservedOp "&&"   >> return (BoolBin And )) AssocLeft,
+                   Infix  (reservedOp "||"   >> return (BoolBin Or  )) AssocLeft,
+                   Infix  (reservedOp "nor"  >> return (BoolBin Nor )) AssocLeft,
+                   Infix  (reservedOp "nand" >> return (BoolBin Nand)) AssocLeft,
+                   Infix  (reservedOp "xor"  >> return (BoolBin Xor )) AssocLeft,
+                   Infix  (reservedOp "xnor" >> return (BoolBin Xnor)) AssocLeft]
+                ]
+
+numTerm =  parens numExpression
+       <|> liftM Var id
+       <|> liftM IntLit integer
+
+boolTerm =  parens boolExpression
+        <|> (reserved "true"  >> return (BoolLit True ))
+        <|> (reserved "false" >> return (BoolLit False))
+        <|> relExpression
+
+relExpression = do a  <- numExpression
+                   op <- relationalOp
+                   b  <- numExpression
+                   return $ BoolRel op a b
+
+relationalOp =   (reservedOp ">"  >> return LT)
+             <|> (reservedOp ">"  >> return GT)
+             <|> (reservedOp "==" >> return EQ)
+             <|> (reservedOp "!=" >> return NE)
+             <|> (reservedOp ">=" >> return GE)
+             <|> (reservedOp "<=" >> return LE)
