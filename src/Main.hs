@@ -1,6 +1,6 @@
 module Main where
-import Types
-import Parser
+import           Types
+import           Parser
 
 main :: IO ()
 main = do

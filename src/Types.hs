@@ -20,10 +20,10 @@ data BoolBinOp = And | Or | Nor | Nand | Xor | Xnor
 data BoolRelOp = GT | LT | EQ | GE | LE | NE
                 deriving (Show)
 
-data ArithOp = Add | Sub | Mul | Div | Mod 
+data ArithOp = Add | Sub | Mul | Div | Mod
               deriving (Show)
 
-data PsiType = BooleanT | IntT | StringT | CharT | TypeVar String 
+data PsiType = VoidT | BooleanT | IntT | StringT | CharT | TypeVar String
               deriving (Show)
 
 data Effect = Pure | Impure | IO | RS | WS
@@ -37,6 +37,7 @@ data Stmt = Empty
           | While Expr Stmt
           | FnDecl String Effect [PsiType] PsiType
           | FnImpl String [String] Stmt
+          | Return Expr
           | ExprLit Expr
            deriving (Show)
 

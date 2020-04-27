@@ -3,4 +3,5 @@
 *.swp
 .stack-work/
 .stack-root/
-
+formatter
+example.hs
