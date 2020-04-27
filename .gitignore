@@ -1,0 +1,6 @@
+*.hi
+*.o
+*.swp
+.stack-work/
+.stack-root/
+
