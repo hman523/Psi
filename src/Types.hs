@@ -1,5 +1,7 @@
 module Types where
 
+import qualified Data.Map                      as Map
+
 data Expr = Var String
           | IntLit Integer
           | Neg Expr
@@ -29,15 +31,6 @@ data PsiType = VoidT | BooleanT | IntT | StringT | CharT | TypeVar String
 data Effect = Pure | Impure | IO | RS | WS
              deriving (Show)
 
---             fn name  effect  parameter types  return type
-type FnDecl = (String,  Effect, [PsiType],       PsiType)
-
---             fn name  parameter names  body
-type FnImpl = (String,  [String],        Stmt)
-
---              mutabilty  type     name    value
-type VarDecl = (Bool,      PsiType, String, Expr)
-
 -- Here we're giving stmt a better name for certain type signatures
 type AST = Stmt
 
@@ -52,4 +45,26 @@ data Stmt = Empty
           | Return Expr
           | ExprLit Expr
            deriving (Show)
+
+--             fn name  effect  parameter types  return type
+type FnDecl = (String, Effect, [PsiType], PsiType)
+
+--             fn name  parameter names  body
+type FnImpl = (String, [String], Stmt)
+
+--              mutabilty  type     name    value
+type VarDecl = (Bool, PsiType, String, Expr)
+
+
+type FnDeclTable = Map.Map String FnDecl
+type FnImplTable = Map.Map String FnImpl
+type VarDeclTable = Map.Map String VarDecl
+type Tables = (FnDeclTable, FnImplTable, VarDeclTable)
+
+data BindError = UndeclaredFunction FnImpl
+               | RedeclaredFunction FnDecl
+               | RedefinedFunction FnImpl
+               | RedeclaredVar VarDecl
+                deriving (Show)
+
 

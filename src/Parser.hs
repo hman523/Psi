@@ -71,7 +71,7 @@ whiteSpace = Token.whiteSpace lexer
 symbol = Token.symbol lexer
 
 parse :: String -> Either ParseError AST
-parse = Text.ParserCombinators.Parsec.parse psiParser "" 
+parse = Text.ParserCombinators.Parsec.parse psiParser ""
 
 psiParser :: Parser Stmt
 psiParser = whiteSpace >> statement
