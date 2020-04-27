@@ -70,6 +70,9 @@ whiteSpace = Token.whiteSpace lexer
 
 symbol = Token.symbol lexer
 
+parse :: String -> Either ParseError AST
+parse = Text.ParserCombinators.Parsec.parse psiParser "" 
+
 psiParser :: Parser Stmt
 psiParser = whiteSpace >> statement
 
@@ -149,7 +152,8 @@ declareStmt =
       t   <- parseType
       var <- id
       reservedOp "="
-      Declare isMut t var <$> parseExpr
+      val <- parseExpr
+      return $ Declare (isMut, t, var, val)
     <?> "variable declaration"
 
 fnCallExpr :: Parser Expr
@@ -167,7 +171,7 @@ fnDeclStmt =
       symbol "->"
       t <- parseType
       symbol "]"
-      return $ FnDecl name e types t
+      return $ FuncDecl (name, e, types, t)
     <?> "function declaration"
 
 fnImplStmt :: Parser Stmt
@@ -179,7 +183,7 @@ fnImplStmt =
       symbol "{"
       stmts <- sequenceOfStmt
       symbol "}"
-      return $ FnImpl name args stmts
+      return $ FuncImpl (name, args, stmts)
     <?> "function implementation"
 
 parseArgs = do

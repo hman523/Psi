@@ -29,14 +29,26 @@ data PsiType = VoidT | BooleanT | IntT | StringT | CharT | TypeVar String
 data Effect = Pure | Impure | IO | RS | WS
              deriving (Show)
 
+--             fn name  effect  parameter types  return type
+type FnDecl = (String,  Effect, [PsiType],       PsiType)
+
+--             fn name  parameter names  body
+type FnImpl = (String,  [String],        Stmt)
+
+--              mutabilty  type     name    value
+type VarDecl = (Bool,      PsiType, String, Expr)
+
+-- Here we're giving stmt a better name for certain type signatures
+type AST = Stmt
+
 data Stmt = Empty
           | Body [Stmt]
           | Assign String Expr
-          | Declare Bool PsiType String Expr
+          | Declare VarDecl
           | If Expr Stmt Stmt
           | While Expr Stmt
-          | FnDecl String Effect [PsiType] PsiType
-          | FnImpl String [String] Stmt
+          | FuncDecl FnDecl
+          | FuncImpl FnImpl
           | Return Expr
           | ExprLit Expr
            deriving (Show)
