@@ -2,6 +2,7 @@ module NameBinder where
 import qualified Data.Map                      as Map
 import           Types
 import           Data.Maybe
+import           Data.List
 
 bindNames :: AST -> Either [BindError] Tables
 bindNames = undefined
@@ -21,6 +22,10 @@ bindStmt (FuncImpl f@(name, _, _)) (fndecltab, fnimpltab, y) =
 
 bindStmt _ tabs = Right tabs
 
+
+-- This functions comfirms all function delcarations have implementations
+confirmDecls :: Tables -> Bool
+confirmDecls (x, y, _) = not (null (Map.keys x \\ Map.keys y))
 
 bindBuiltIns :: Tables
 bindBuiltIns =
