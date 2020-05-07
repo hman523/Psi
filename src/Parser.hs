@@ -107,11 +107,11 @@ ifStmt =
       reserved "if"
       predicate <- boolExpression
       symbol "{"
-      trueStmt <- statement
+      trueStmt <- sequenceOfStmt
       symbol "}"
       reserved "else"
       symbol "{"
-      falseStmt <- statement
+      falseStmt <- sequenceOfStmt
       symbol "}"
       return $ If predicate trueStmt falseStmt
     <?> "if statement"

@@ -1,7 +1,6 @@
 module Types where
 
 import qualified Data.Map                      as Map
-
 data Expr = Var String
           | IntLit Integer
           | Neg Expr
@@ -58,7 +57,10 @@ type VarDecl = (Bool, PsiType, String, Expr)
 
 type FnDeclTable = Map.Map String FnDecl
 type FnImplTable = Map.Map String FnImpl
-type VarDeclTable = Map.Map String VarDecl
+type ScopeTable = [Map.Map String VarDecl]
+type ParentTable = [[Int]]
+type VarDeclTable = (ScopeTable, ParentTable)
+
 type Tables = (FnDeclTable, FnImplTable, VarDeclTable)
 
 data BindError = UndeclaredFunction FnImpl
